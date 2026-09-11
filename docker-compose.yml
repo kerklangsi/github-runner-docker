@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  github-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: github-runner:latest
+    container_name: github-runner
+    restart: unless-stopped
+    environment:
+      - TARGET_URL=${TARGET_URL:-${REPO_URL}}
+      - RUNNER_TOKEN=${RUNNER_TOKEN}
+      - ACCESS_TOKEN=${ACCESS_TOKEN:-${GITHUB_PAT}}
+      - RUNNER_NAME=${RUNNER_NAME}
+      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64,docker}
+      - RUNNER_GROUP=${RUNNER_GROUP:-Default}
+      - EPHEMERAL=${EPHEMERAL:-false}
+      - DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-false}
+      - RUNNER_WORKDIR=${RUNNER_WORKDIR:-_work}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner-work:/actions-runner/_work
+
+volumes:
+  runner-work:
