@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: github-runner:latest
+    image: kerklangsi/github-runner-docker:latest
     container_name: github-runner
     restart: unless-stopped
     environment:
