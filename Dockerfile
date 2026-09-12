@@ -37,9 +37,15 @@ RUN echo "Downloading runner version: ${RUNNER_VERSION}" && \
     rm actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
     ./bin/installdependencies.sh
 
-COPY entrypoint.sh /actions-runner/entrypoint.sh
-RUN chmod +x /actions-runner/entrypoint.sh && chown runner:runner /actions-runner/entrypoint.sh
+COPY entrypoint.sh run_runner.sh stop_runner.sh web_server.py /actions-runner/
+COPY templates /actions-runner/templates
+
+RUN chmod +x /actions-runner/*.sh && \
+    chown -R runner:runner /actions-runner
+
+EXPOSE 8080
 
 USER runner
 
 ENTRYPOINT ["/actions-runner/entrypoint.sh"]
+
