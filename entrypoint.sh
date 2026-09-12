@@ -5,12 +5,21 @@ mkdir -p /actions-runner/data
 sudo mkdir -p /actions-runner/_work
 sudo chown -R runner:runner /actions-runner/_work /actions-runner/data
 
+touch /actions-runner/runner.log
+
+# Stream log file to stdout so CasaOS and docker logs see all output live
+tail -n 100 -f /actions-runner/runner.log &
+TAIL_PID=$!
+
 # Cleanup function on container shutdown
 cleanup() {
   echo "Shutting down container services..."
   /bin/bash /actions-runner/stop_runner.sh || true
   if [ -n "$WEB_PID" ]; then
     kill "$WEB_PID" || true
+  fi
+  if [ -n "$TAIL_PID" ]; then
+    kill "$TAIL_PID" || true
   fi
 }
 
@@ -40,4 +49,5 @@ fi
 
 # Keep container process alive via web server
 wait "${WEB_PID}"
+
 
