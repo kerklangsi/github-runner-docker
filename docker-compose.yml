@@ -12,7 +12,7 @@ services:
     stdin_open: true
 
     ports:
-      - "3000:3000"
+      - "${PORT:-8080}:3000"
     environment:
       - TARGET_URL=${TARGET_URL:-${REPO_URL}}
       - RUNNER_TOKEN=${RUNNER_TOKEN}
