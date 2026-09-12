@@ -2,10 +2,11 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies & CLI tools
+# Install system dependencies, Node.js 20 & CLI tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    gnupg \
     jq \
     git \
     build-essential \
@@ -13,23 +14,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     python3 \
     python3-pip \
-    python3-venv \
-    python-is-python3 \
     sudo \
     tar \
     unzip \
     iputils-ping \
-    docker.io \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root runner user with passwordless sudo
 RUN useradd -m -s /bin/bash runner \
-    && echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && usermod -aG docker runner
+    && echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# Create runner base binaries directory
 WORKDIR /actions-runner
-
-# Download latest GitHub Actions Runner release
 ARG RUNNER_VERSION=2.337.0
 RUN echo "Downloading runner version: ${RUNNER_VERSION}" && \
     curl -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
@@ -37,15 +35,26 @@ RUN echo "Downloading runner version: ${RUNNER_VERSION}" && \
     rm actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
     ./bin/installdependencies.sh
 
-COPY entrypoint.sh run_runner.sh stop_runner.sh web_server.py /actions-runner/
-COPY templates /actions-runner/templates
+# Copy backend & frontend source files
+WORKDIR /app
+COPY backend /app/backend
+COPY frontend /app/frontend
 
-RUN chmod +x /actions-runner/*.sh && \
-    chown -R runner:runner /actions-runner
+# Build frontend and install backend dependencies
+RUN cd /app/frontend && npm install && npm run build
+RUN cd /app/backend && npm install
 
-EXPOSE 8080
+# Create runners storage directory
+RUN mkdir -p /opt/github-runners /app/data && \
+    chown -R runner:runner /opt/github-runners /app/data /actions-runner /app
+
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 3000
 
 USER runner
 
-ENTRYPOINT ["/actions-runner/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+
 

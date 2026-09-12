@@ -12,24 +12,18 @@ services:
     stdin_open: true
 
     ports:
-      - "8080:8080"
+      - "3000:3000"
     environment:
       - TARGET_URL=${TARGET_URL:-${REPO_URL}}
       - RUNNER_TOKEN=${RUNNER_TOKEN}
       - ACCESS_TOKEN=${ACCESS_TOKEN:-${GITHUB_PAT}}
       - RUNNER_NAME=${RUNNER_NAME}
-      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64,docker}
+      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64}
       - RUNNER_GROUP=${RUNNER_GROUP:-Default}
-      - AUTO_START=${AUTO_START:-true}
-      - EPHEMERAL=${EPHEMERAL:-false}
-      - DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-false}
-      - RUNNER_WORKDIR=${RUNNER_WORKDIR:-_work}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - runner-work:/actions-runner/_work
-      - runner-data:/actions-runner/data
+      - github-runners:/opt/github-runners
+      - app-data:/app/data
 
 volumes:
-  runner-work:
-  runner-data:
-
+  github-runners:
+  app-data:

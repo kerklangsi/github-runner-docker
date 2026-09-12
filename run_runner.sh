@@ -25,9 +25,16 @@ ACCESS_TOKEN="${ACCESS_TOKEN:-${GITHUB_PAT:-$PAT}}"
 RUNNER_NAME="${RUNNER_NAME:-runner-$(hostname)}"
 RUNNER_LABELS="${RUNNER_LABELS:-self-hosted,linux,x64,docker}"
 
-if [ -z "${TARGET_URL}" ]; then
-  echo "Error: TARGET_URL is not set. Configure it via the Web UI on port 8080." >> /actions-runner/runner.log
-  exit 1
+if [ -z "${TARGET_URL}" ] || [ "${TARGET_URL}" = "https://github.com/kerklangsi/your-repo" ]; then
+  echo "Notice: Target GitHub URL is not configured yet. Open Web UI at http://<host>:8080 to configure your Repository URL and PAT token." >> /actions-runner/runner.log
+  echo "Notice: Target GitHub URL is not configured yet. Open Web UI at http://<host>:8080 to configure your Repository URL and PAT token."
+  exit 0
+fi
+
+if [ -z "${RUNNER_TOKEN}" ] && [ -z "${ACCESS_TOKEN}" ]; then
+  echo "Notice: Neither RUNNER_TOKEN nor ACCESS_TOKEN is configured. Open Web UI at http://<host>:8080 to enter your PAT token." >> /actions-runner/runner.log
+  echo "Notice: Neither RUNNER_TOKEN nor ACCESS_TOKEN is configured. Open Web UI at http://<host>:8080 to enter your PAT token."
+  exit 0
 fi
 
 if [ -z "${RUNNER_TOKEN}" ] && [ -n "${ACCESS_TOKEN}" ]; then
@@ -48,9 +55,11 @@ if [ -z "${RUNNER_TOKEN}" ] && [ -n "${ACCESS_TOKEN}" ]; then
 fi
 
 if [ -z "${RUNNER_TOKEN}" ]; then
-  echo "Error: Unable to fetch registration token. Check your TARGET_URL and Personal Access Token." >> /actions-runner/runner.log
-  exit 1
+  echo "Error: Unable to fetch registration token. Check your TARGET_URL and Personal Access Token in Web UI." >> /actions-runner/runner.log
+  echo "Error: Unable to fetch registration token. Check your TARGET_URL and Personal Access Token in Web UI."
+  exit 0
 fi
+
 
 cd /actions-runner
 
