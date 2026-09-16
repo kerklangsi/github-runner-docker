@@ -9,7 +9,7 @@ export default function AboutModal({
 }) {
   if (!isAboutModalOpen) return null;
 
-  const currentVer = versionInfo?.currentVersion || 'v3.0.0';
+  const currentVer = versionInfo?.currentVersion || 'v2.0.0';
   const latestVer = versionInfo?.latestVersion || currentVer;
   const isOutdated = versionInfo?.updateAvailable;
 

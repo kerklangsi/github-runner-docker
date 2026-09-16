@@ -42,7 +42,7 @@ export default function TopHeader({
           className="text-xs text-[#8b949e] hover:text-white px-2 py-1 rounded hover:bg-[#21262d] transition"
           title="App Info & Updates"
         >
-          {versionInfo?.currentVersion || 'v3.0.0'}
+          {versionInfo?.currentVersion || 'v2.0.0'}
         </button>
 
         <button 
