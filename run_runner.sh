@@ -25,7 +25,7 @@ ACCESS_TOKEN="${ACCESS_TOKEN:-${GITHUB_PAT:-$PAT}}"
 RUNNER_NAME="${RUNNER_NAME:-runner-$(hostname)}"
 RUNNER_LABELS="${RUNNER_LABELS:-self-hosted,linux,x64,docker}"
 
-if [ -z "${TARGET_URL}" ] || [ "${TARGET_URL}" = "https://github.com/kerklangsi/your-repo" ]; then
+if [ -z "${TARGET_URL}" ] || [ "${TARGET_URL}" = "https://github.com/owner/repository" ]; then
   echo "Notice: Target GitHub URL is not configured yet. Open Web UI at http://<host>:8080 to configure your Repository URL and PAT token." >> /actions-runner/runner.log
   echo "Notice: Target GitHub URL is not configured yet. Open Web UI at http://<host>:8080 to configure your Repository URL and PAT token."
   exit 0

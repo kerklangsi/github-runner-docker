@@ -1,0 +1,122 @@
+/* Theme Design System for GitHub Runner Manager */
+
+:root, [data-theme="dark"] {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-console: #011627;
+  --border-color: #30363d;
+  --text-main: #c9d1d9;
+  --text-heading: #ffffff;
+  --text-muted: #8b949e;
+  --text-console: #d6deeb;
+  --accent-blue: #58a6ff;
+  --card-bg: #161b22;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f6f8fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --bg-console: #f8fafc;
+  --border-color: #d0d7de;
+  --text-main: #24292f;
+  --text-heading: #0f172a;
+  --text-muted: #57606a;
+  --text-console: #0f172a;
+  --accent-blue: #0969da;
+  --card-bg: #ffffff;
+}
+
+[data-theme="cyberpunk"] {
+  --bg-primary: #090a0f;
+  --bg-secondary: #12131c;
+  --bg-tertiary: #1c1e2e;
+  --bg-console: #050608;
+  --border-color: #2e324a;
+  --text-main: #e0e6ed;
+  --text-heading: #00f0ff;
+  --text-muted: #707a9e;
+  --text-console: #00f0ff;
+  --accent-blue: #7000ff;
+  --card-bg: #12131c;
+}
+
+/* Global Body & Root Variables */
+body, #root {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-main) !important;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Dynamic Theme Utility Overrides */
+[data-theme="light"] .bg-\[\#0d1117\], [data-theme="light"] main {
+  background-color: #f6f8fa !important;
+}
+
+[data-theme="light"] .bg-\[\#161b22\], [data-theme="light"] header, [data-theme="light"] aside {
+  background-color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-\[\#21262d\] {
+  background-color: #eef2f6 !important;
+}
+
+[data-theme="light"] .bg-\[\#011627\] {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .border-\[\#30363d\] {
+  border-color: #d0d7de !important;
+}
+
+[data-theme="light"] .text-\[\#c9d1d9\] {
+  color: #24292f !important;
+}
+
+[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .text-\[\#8b949e\] {
+  color: #57606a !important;
+}
+
+[data-theme="light"] .text-\[\#d6deeb\] {
+  color: #1e293b !important;
+}
+
+/* Cyberpunk Theme Overrides */
+[data-theme="cyberpunk"] .bg-\[\#0d1117\], [data-theme="cyberpunk"] main {
+  background-color: #090a0f !important;
+}
+
+[data-theme="cyberpunk"] .bg-\[\#161b22\], [data-theme="cyberpunk"] header, [data-theme="cyberpunk"] aside {
+  background-color: #12131c !important;
+}
+
+[data-theme="cyberpunk"] .bg-\[\#21262d\] {
+  background-color: #1c1e2e !important;
+}
+
+[data-theme="cyberpunk"] .bg-\[\#011627\] {
+  background-color: #050608 !important;
+  color: #00f0ff !important;
+}
+
+[data-theme="cyberpunk"] .border-\[\#30363d\] {
+  border-color: #2e324a !important;
+}
+
+[data-theme="cyberpunk"] .text-white {
+  color: #00f0ff !important;
+}
+
+[data-theme="cyberpunk"] .text-\[\#8b949e\] {
+  color: #707a9e !important;
+}
+
+[data-theme="cyberpunk"] .text-\[\#d6deeb\] {
+  color: #00f0ff !important;
+}

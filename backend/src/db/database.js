@@ -6,6 +6,8 @@ const RUNNERS_FILE = path.join(DATA_DIR, 'runners.json');
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
+const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
+
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -15,6 +17,14 @@ function ensureDataDir() {
   }
   if (!fs.existsSync(JOBS_FILE)) {
     fs.writeFileSync(JOBS_FILE, JSON.stringify([], null, 2), 'utf-8');
+  }
+  if (!fs.existsSync(AUTH_FILE)) {
+    const defaultAuth = {
+      username: "admin",
+      password: "admin123",
+      lastLogin: null
+    };
+    fs.writeFileSync(AUTH_FILE, JSON.stringify(defaultAuth, null, 2), 'utf-8');
   }
   if (!fs.existsSync(SETTINGS_FILE)) {
     const defaultSettings = {
@@ -30,7 +40,9 @@ function ensureDataDir() {
       refreshInterval: 3,
       cpuWarningThreshold: 85,
       ramWarningThreshold: 85,
-      diskWarningThreshold: 90
+      diskWarningThreshold: 90,
+      logLevel: "INFO",
+      showHeadlines: false
     };
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(defaultSettings, null, 2), 'utf-8');
   }
@@ -69,11 +81,24 @@ function saveSettings(settings) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
 }
 
+function getAuth() {
+  ensureDataDir();
+  const raw = fs.readFileSync(AUTH_FILE, 'utf-8');
+  return JSON.parse(raw || '{}');
+}
+
+function saveAuth(auth) {
+  ensureDataDir();
+  fs.writeFileSync(AUTH_FILE, JSON.stringify(auth, null, 2), 'utf-8');
+}
+
 module.exports = {
   getRunners,
   saveRunners,
   getJobs,
   saveJobs,
   getSettings,
-  saveSettings
+  saveSettings,
+  getAuth,
+  saveAuth
 };
