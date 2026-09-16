@@ -6,7 +6,7 @@ const DOCKERHUB_REPO = 'kerklangsi/github-runner-docker';
 
 let cachedVersionInfo = null;
 let lastCheckTime = 0;
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
 
 function fetchJson(url, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -57,6 +57,9 @@ async function checkVersion() {
   let publishedAt = '';
   let releaseName = '';
 
+  let found = false;
+
+  // 1. Try GitHub Latest Release API
   try {
     const ghData = await fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
     if (ghData && ghData.tag_name) {
@@ -64,11 +67,29 @@ async function checkVersion() {
       releaseName = ghData.name || ghData.tag_name;
       releaseNotes = ghData.body || '';
       publishedAt = ghData.published_at || '';
+      found = true;
     }
-  } catch (err) {
-    // GitHub API fallback: query Docker Hub tags
+  } catch (err) {}
+
+  // 2. Try GitHub Tags API if no official GitHub release object exists yet
+  if (!found) {
     try {
-      const dhData = await fetchJson(`https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags?page_size=5`);
+      const tagsData = await fetchJson(`https://api.github.com/repos/${GITHUB_REPO}/tags`);
+      if (Array.isArray(tagsData) && tagsData.length > 0) {
+        const validTag = tagsData.find(t => /^v?\d+\.\d+/.test(t.name));
+        if (validTag) {
+          latestVersion = validTag.name;
+          releaseName = validTag.name;
+          found = true;
+        }
+      }
+    } catch (tagErr) {}
+  }
+
+  // 3. Fallback: query Docker Hub tags API
+  if (!found) {
+    try {
+      const dhData = await fetchJson(`https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags?page_size=10`);
       if (dhData && dhData.results) {
         const validTag = dhData.results.find(t => t.name !== 'latest' && /^v?\d+\.\d+/.test(t.name));
         if (validTag) {
@@ -76,9 +97,7 @@ async function checkVersion() {
           publishedAt = validTag.last_updated || '';
         }
       }
-    } catch (dhErr) {
-      // Keep current version if offline
-    }
+    } catch (dhErr) {}
   }
 
   const updateAvailable = compareVersions(CURRENT_VERSION, latestVersion) > 0;
