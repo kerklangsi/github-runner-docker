@@ -89,7 +89,7 @@ docker compose up -d
 
 ## 📄 License
 
-Distributed under the MIT License. See [`LICENSE`](file:///e:/GoogleDrive/Github/github-runner-docker/LICENSE) for more information.
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
 
 ---
 
