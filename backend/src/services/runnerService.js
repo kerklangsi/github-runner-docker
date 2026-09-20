@@ -6,17 +6,20 @@ const logService = require('./logService');
 
 const BASE_RUNNERS_DIR = process.env.RUNNERS_DIR || '/opt/github-runners';
 
+// Ensures base runners working directory exists on disk.
 function ensureBaseDir() {
   if (!fs.existsSync(BASE_RUNNERS_DIR)) {
     fs.mkdirSync(BASE_RUNNERS_DIR, { recursive: true });
   }
 }
 
+// Resolves and returns absolute path of runner directory.
 function getRunnerDir(runner) {
   if (!runner) return BASE_RUNNERS_DIR;
   return runner.dir || runner.runner_dir || runner.runnerDir || path.join(BASE_RUNNERS_DIR, runner.name || 'runner');
 }
 
+// Retrieves all tracked runner records with live process status updates.
 function getAllRunners() {
   const runners = db.getRunners();
   return runners.map(runner => {
@@ -25,48 +28,72 @@ function getAllRunners() {
   });
 }
 
+// Checks runner process state and updates status based on live binary process detection.
 function checkRunnerProcessState(runner) {
   if (runner.status === 'PROVISIONING') {
     return runner;
   }
 
+  const runnerDir = getRunnerDir(runner);
+  const actionsRunnerDir = path.join(runnerDir, 'actions-runner');
+
   let isAlive = false;
-  if (runner.pid) {
-    if (fs.existsSync(`/proc/${runner.pid}`)) {
-      isAlive = true;
-    }
+  let listenerPid = null;
+
+  // Verify if runner.pid is genuinely active and belongs to Runner.Listener or run.sh
+  if (runner.pid && fs.existsSync(`/proc/${runner.pid}/cmdline`)) {
+    try {
+      const cmdline = fs.readFileSync(`/proc/${runner.pid}/cmdline`, 'utf-8');
+      if (cmdline.includes('Runner.Listener') || cmdline.includes('run.sh')) {
+        isAlive = true;
+        listenerPid = runner.pid;
+      }
+    } catch (e) {}
   }
 
-  const runnerDir = getRunnerDir(runner);
+  // Secondary check: search specifically for active Runner.Listener daemon process for this runner directory
+  // Note: Use [R]unner bracket trick so pgrep does not match its own command line!
+  if (!isAlive && fs.existsSync(actionsRunnerDir)) {
+    try {
+      const pgrep = execSync(`pgrep -f "${actionsRunnerDir}/bin/[R]unner.Listener" 2>/dev/null`, { encoding: 'utf-8' });
+      if (pgrep && pgrep.trim().length > 0) {
+        isAlive = true;
+        const pids = pgrep.trim().split('\n');
+        listenerPid = parseInt(pids[0], 10);
+      }
+    } catch (e) {}
+  }
+
   let status = "OFFLINE";
   if (isAlive) {
-    status = "ONLINE";
-    const diagDir = path.join(runnerDir, 'actions-runner', '_diag');
-    if (fs.existsSync(diagDir)) {
-      const files = fs.readdirSync(diagDir).filter(f => f.startsWith('Runner_'));
-      if (files.length > 0) {
-        files.sort((a, b) => fs.statSync(path.join(diagDir, b)).mtimeMs - fs.statSync(path.join(diagDir, a)).mtimeMs);
-        const latestLog = fs.readFileSync(path.join(diagDir, files[0]), 'utf-8');
-        if (latestLog.includes('Running job:')) {
-          status = "BUSY";
-        } else if (latestLog.includes('Listening for Jobs')) {
-          status = "IDLE";
-        }
+    runner.pid = listenerPid;
+    // Check if an active worker process is executing a job (using [R]unner bracket trick)
+    let isWorkerRunning = false;
+    try {
+      const workerPgrep = execSync(`pgrep -f "${actionsRunnerDir}/bin/[R]unner.Worker" 2>/dev/null`, { encoding: 'utf-8' });
+      if (workerPgrep && workerPgrep.trim().length > 0) {
+        isWorkerRunning = true;
       }
-    }
-  } else if (runner.lastState === "ONLINE" || runner.lastState === "BUSY" || runner.lastState === "IDLE") {
-    status = "CRASHED";
+    } catch (e) {}
+
+    status = isWorkerRunning ? "BUSY" : "IDLE";
+  } else {
+    runner.pid = null;
+    status = "OFFLINE";
   }
 
   runner.status = status;
+  runner.lastState = status;
   return runner;
 }
 
+// Retrieves a single runner record by unique ID.
 function getRunnerById(id) {
   const runners = getAllRunners();
   return runners.find(r => r.id === id) || null;
 }
 
+// Provisions directory structure and registers a new GitHub Actions runner container in background.
 function createRunner(options) {
   ensureBaseDir();
   const id = `runner-${Date.now()}`;
@@ -223,6 +250,7 @@ function createRunner(options) {
   return { success: true, runner: runnerRecord };
 }
 
+// Spawns runner daemon process and logs output to disk.
 function startRunner(id) {
   const runners = db.getRunners();
   const runnerIndex = runners.findIndex(r => r.id === id);
@@ -290,15 +318,25 @@ function startRunner(id) {
   return { success: true, pid: child.pid };
 }
 
+// Stops a runner container process group and cleans up any orphaned runner sub-processes.
 function stopRunner(id) {
   const runners = db.getRunners();
   const runnerIndex = runners.findIndex(r => r.id === id);
   if (runnerIndex === -1) return { error: 'Runner not found' };
 
   const runner = runners[runnerIndex];
+  const runnerDir = getRunnerDir(runner);
+  const actionsRunnerDir = path.join(runnerDir, 'actions-runner');
+
   if (runner.pid) {
-    execSync(`kill -15 ${runner.pid} || kill -9 ${runner.pid} || true`);
+    try {
+      execSync(`kill -15 -${runner.pid} 2>/dev/null || kill -9 -${runner.pid} 2>/dev/null || kill -15 ${runner.pid} 2>/dev/null || kill -9 ${runner.pid} 2>/dev/null || true`);
+    } catch (e) {}
   }
+
+  try {
+    execSync(`pkill -9 -f "${actionsRunnerDir}" 2>/dev/null || true`);
+  } catch (e) {}
 
   runner.pid = null;
   runner.status = 'OFFLINE';
@@ -311,12 +349,14 @@ function stopRunner(id) {
   return { success: true };
 }
 
+// Restarts a runner container by invoking stopRunner followed by startRunner.
 function restartRunner(id) {
   logService.addSystemLog('INFO', `Sent RESTART command to runner container ID '${id}'.`);
   stopRunner(id);
   return startRunner(id);
 }
 
+// Removes runner registration, archives log files, and optionally deletes working directory.
 function removeRunner(id, removeWorkDir = false) {
   stopRunner(id);
   const runners = db.getRunners();
@@ -371,6 +411,7 @@ function removeRunner(id, removeWorkDir = false) {
   return { success: true };
 }
 
+// Updates configuration metadata parameters for an existing runner instance.
 function updateRunnerConfig(id, config) {
   const runners = db.getRunners();
   const index = runners.findIndex(r => r.id === id);
@@ -390,6 +431,7 @@ function updateRunnerConfig(id, config) {
   return { success: true, runner };
 }
 
+// Sends start command to all registered runner containers.
 function startAllRunners() {
   const runners = db.getRunners();
   const results = runners.map(r => startRunner(r.id));
@@ -397,6 +439,7 @@ function startAllRunners() {
   return { success: true, count: results.length };
 }
 
+// Sends stop command to all active runner containers.
 function stopAllRunners() {
   const runners = db.getRunners();
   const results = runners.map(r => stopRunner(r.id));
