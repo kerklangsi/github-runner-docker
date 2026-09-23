@@ -93,6 +93,21 @@ function getRunnerById(id) {
   return runners.find(r => r.id === id) || null;
 }
 
+// Parses organization/owner and repository names from target GitHub URL.
+function extractRepoInfo(githubUrl) {
+  if (!githubUrl) return { org: '', repo: '', fullKey: 'default' };
+  const clean = githubUrl.trim().replace(/\/$/, '');
+  const orgMatch = clean.match(/github\.com\/orgs\/([^/]+)/i);
+  if (orgMatch) {
+    return { org: orgMatch[1], repo: '', fullKey: orgMatch[1] };
+  }
+  const repoMatch = clean.match(/github\.com\/([^/]+)\/([^/]+)/i);
+  if (repoMatch) {
+    return { org: repoMatch[1], repo: repoMatch[2], fullKey: `${repoMatch[1]}/${repoMatch[2]}` };
+  }
+  return { org: '', repo: '', fullKey: 'default' };
+}
+
 // Provisions directory structure and registers a new GitHub Actions runner container in background.
 function createRunner(options) {
   ensureBaseDir();
@@ -130,10 +145,49 @@ function createRunner(options) {
     execSync(`cp -rn ${baseSource}/* ${actionsRunnerDir}/ || true`);
   }
 
-  // Ensure runner environment variables (.env) so workflows recognize tool cache
+  // Set up shared persistent repository data and cache directories
+  const repoInfo = extractRepoInfo(options.githubUrl);
+  const repoName = repoInfo.repo || repoInfo.fullKey;
+  const sharedRepoDir = path.join(BASE_RUNNERS_DIR, 'shared_data', repoName);
+  const sharedAuthDir = path.join(sharedRepoDir, 'auth');
+  const sharedCacheDir = path.join(sharedRepoDir, 'cache');
+
+  try {
+    fs.mkdirSync(sharedAuthDir, { recursive: true });
+    fs.mkdirSync(sharedCacheDir, { recursive: true });
+    // Support legacy shared_auth directory if present
+    const legacyAuthDir = path.join(BASE_RUNNERS_DIR, 'shared_auth', repoName);
+    if (fs.existsSync(legacyAuthDir) && !fs.existsSync(sharedAuthDir)) {
+      fs.symlinkSync(legacyAuthDir, sharedAuthDir, 'dir');
+    }
+  } catch (e) {}
+
+  // Pre-link runner workspace auth directory to shared repository auth folder
+  if (repoInfo.repo) {
+    try {
+      const repoWorkDir = path.join(workDir, repoInfo.repo, repoInfo.repo);
+      fs.mkdirSync(repoWorkDir, { recursive: true });
+      const authSymlink = path.join(repoWorkDir, 'auth');
+      if (!fs.existsSync(authSymlink)) {
+        const targetAuth = fs.existsSync(path.join(BASE_RUNNERS_DIR, 'shared_auth', repoName))
+          ? path.join(BASE_RUNNERS_DIR, 'shared_auth', repoName)
+          : sharedAuthDir;
+        const relPath = path.relative(repoWorkDir, targetAuth);
+        fs.symlinkSync(relPath, authSymlink, 'dir');
+      }
+    } catch (e) {}
+  }
+
+  // Ensure runner environment variables (.env) so workflows recognize tool cache and shared repo storage
   try {
     const envFile = path.join(actionsRunnerDir, '.env');
-    fs.writeFileSync(envFile, 'RUNNER_TOOL_CACHE=/opt/hostedtoolcache\n');
+    const envContent = [
+      'RUNNER_TOOL_CACHE=/opt/hostedtoolcache',
+      `SHARED_REPO_DATA=${sharedRepoDir}`,
+      `SHARED_AUTH_DIR=${sharedAuthDir}`,
+      `SHARED_CACHE_DIR=${sharedCacheDir}`
+    ].join('\n') + '\n';
+    fs.writeFileSync(envFile, envContent);
   } catch (e) {}
 
   const runnerRecord = {
