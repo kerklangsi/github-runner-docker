@@ -55,9 +55,10 @@ COPY frontend /app/frontend
 RUN cd /app/frontend && npm install && npm run build
 RUN cd /app/backend && npm install
 
-# Create runners storage, tool cache, and user cache directories
-RUN mkdir -p /opt/github-runners /app/data /opt/hostedtoolcache /home/runner/.cache && \
-    chown -R runner:runner /opt/github-runners /app/data /actions-runner /app /opt/hostedtoolcache /home/runner/.cache
+# Create runners storage, shared data, tool cache symlink, and user cache directories
+RUN mkdir -p /opt/github-runners /app/data /home/runner/.cache /opt/github-runners/shared_data && \
+    ln -sfn /home/runner/.cache /opt/hostedtoolcache && \
+    chown -R runner:runner /opt/github-runners /app/data /actions-runner /app /home/runner/.cache
 
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh

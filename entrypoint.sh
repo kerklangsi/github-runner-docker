@@ -5,8 +5,9 @@ mkdir -p /opt/github-runners /app/data /home/runner/.cache /opt/github-runners/s
 
 # Unify hostedtoolcache into single cache volume so docker-compose requires only 1 volume mount
 if [ ! -L /opt/hostedtoolcache ]; then
-  rm -rf /opt/hostedtoolcache
-  ln -sfn /home/runner/.cache /opt/hostedtoolcache
+  sudo rm -rf /opt/hostedtoolcache
+  sudo ln -sfn /home/runner/.cache /opt/hostedtoolcache
+  sudo chown -h runner:runner /opt/hostedtoolcache || true
 fi
 
 sudo chown -R runner:runner /home/runner/.cache /opt/github-runners /app/data || true
