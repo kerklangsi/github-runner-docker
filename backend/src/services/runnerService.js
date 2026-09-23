@@ -5,11 +5,15 @@ const db = require('../db/database');
 const logService = require('./logService');
 
 const BASE_RUNNERS_DIR = process.env.RUNNERS_DIR || '/opt/github-runners';
+const SHARED_DATA_DIR = process.env.SHARED_DATA_DIR || '/opt/shared_data';
 
-// Ensures base runners working directory exists on disk.
+// Ensures base runners and shared data working directories exist on disk.
 function ensureBaseDir() {
   if (!fs.existsSync(BASE_RUNNERS_DIR)) {
     fs.mkdirSync(BASE_RUNNERS_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(SHARED_DATA_DIR)) {
+    fs.mkdirSync(SHARED_DATA_DIR, { recursive: true });
   }
 }
 
@@ -148,7 +152,7 @@ function createRunner(options) {
   // Set up shared persistent repository data and cache directories
   const repoInfo = extractRepoInfo(options.githubUrl);
   const repoName = repoInfo.repo || repoInfo.fullKey;
-  const sharedRepoDir = path.join(BASE_RUNNERS_DIR, 'shared_data', repoName);
+  const sharedRepoDir = path.join(SHARED_DATA_DIR, repoName);
   const sharedAuthDir = path.join(sharedRepoDir, 'auth');
   const sharedCacheDir = path.join(sharedRepoDir, 'cache');
 

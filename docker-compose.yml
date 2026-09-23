@@ -27,7 +27,7 @@ services:
         target: /opt/github-runners
       - type: bind
         source: /DATA/AppData/github-runner-docker/shared_data
-        target: /opt/github-runners/shared_data
+        target: /opt/shared_data
       - type: bind
         source: /DATA/AppData/github-runner-docker/cache
         target: /home/runner/.cache
@@ -56,7 +56,7 @@ services:
         - container: /opt/github-runners
           description:
             en_us: Provisioned runner working directories
-        - container: /opt/github-runners/shared_data
+        - container: /opt/shared_data
           description:
             en_us: Shared persistent repository data and authentication tokens
         - container: /home/runner/.cache

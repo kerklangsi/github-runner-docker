@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-mkdir -p /opt/github-runners /app/data /home/runner/.cache /opt/github-runners/shared_data
+mkdir -p /opt/github-runners /app/data /home/runner/.cache /opt/shared_data
 
 # Unify hostedtoolcache into single cache volume so docker-compose requires only 1 volume mount
 if [ ! -L /opt/hostedtoolcache ]; then
@@ -10,7 +10,7 @@ if [ ! -L /opt/hostedtoolcache ]; then
   sudo chown -h runner:runner /opt/hostedtoolcache || true
 fi
 
-sudo chown -R runner:runner /home/runner/.cache /opt/github-runners /app/data || true
+sudo chown -R runner:runner /home/runner/.cache /opt/github-runners /app/data /opt/shared_data || true
 
 DATA_FILE="/app/data/runners.json"
 if [ ! -f "$DATA_FILE" ]; then
