@@ -14,6 +14,7 @@ services:
       - PORT=8080
       - DATA_DIR=/app/data
       - RUNNERS_DIR=/opt/github-runners
+      - RUNNER_TOOL_CACHE=/opt/hostedtoolcache
     volumes:
       - type: bind
         source: /var/run/docker.sock
@@ -24,6 +25,12 @@ services:
       - type: bind
         source: /DATA/AppData/github-runner-docker/runners
         target: /opt/github-runners
+      - type: bind
+        source: /DATA/AppData/github-runner-docker/toolcache
+        target: /opt/hostedtoolcache
+      - type: bind
+        source: /DATA/AppData/github-runner-docker/cache
+        target: /home/runner/.cache
     x-casaos:
       envs:
         - container: PORT
@@ -32,6 +39,9 @@ services:
         - container: DATA_DIR
           description:
             en_us: Database and configuration storage directory
+        - container: RUNNER_TOOL_CACHE
+          description:
+            en_us: Shared Action tool cache directory (Python, Node, etc.)
       ports:
         - container: "8080"
           description:
@@ -46,6 +56,12 @@ services:
         - container: /opt/github-runners
           description:
             en_us: Provisioned runner working directories
+        - container: /opt/hostedtoolcache
+          description:
+            en_us: Persistent tool cache for setup-python, setup-node, etc.
+        - container: /home/runner/.cache
+          description:
+            en_us: Persistent cache for Playwright browsers and pip packages
 
 x-casaos:
   architectures:

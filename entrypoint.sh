@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-mkdir -p /opt/github-runners /app/data
+mkdir -p /opt/github-runners /app/data /opt/hostedtoolcache /home/runner/.cache
+sudo chown -R runner:runner /opt/hostedtoolcache /home/runner/.cache /opt/github-runners /app/data || true
 
 DATA_FILE="/app/data/runners.json"
 if [ ! -f "$DATA_FILE" ]; then

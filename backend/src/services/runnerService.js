@@ -130,6 +130,12 @@ function createRunner(options) {
     execSync(`cp -rn ${baseSource}/* ${actionsRunnerDir}/ || true`);
   }
 
+  // Ensure runner environment variables (.env) so workflows recognize tool cache
+  try {
+    const envFile = path.join(actionsRunnerDir, '.env');
+    fs.writeFileSync(envFile, 'RUNNER_TOOL_CACHE=/opt/hostedtoolcache\n');
+  } catch (e) {}
+
   const runnerRecord = {
     id,
     name: sanitizedName,

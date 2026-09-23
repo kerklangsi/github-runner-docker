@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies, Node.js 20 & CLI tools
+# Install system dependencies, Python 3.11, Node.js 20 & CLI tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
@@ -12,12 +12,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libssl-dev \
     libffi-dev \
+    software-properties-common \
     python3 \
     python3-pip \
     sudo \
     tar \
     unzip \
     iputils-ping \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       python3.11 \
+       python3.11-venv \
+       python3.11-dev \
+       python3.11-distutils \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
@@ -25,6 +33,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create non-root runner user with passwordless sudo
 RUN useradd -m -s /bin/bash runner \
     && echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Pre-configure GitHub Actions tool cache directory & environment
+ENV RUNNER_TOOL_CACHE=/opt/hostedtoolcache
 
 # Create runner base binaries directory
 WORKDIR /actions-runner
@@ -44,9 +55,9 @@ COPY frontend /app/frontend
 RUN cd /app/frontend && npm install && npm run build
 RUN cd /app/backend && npm install
 
-# Create runners storage directory
-RUN mkdir -p /opt/github-runners /app/data && \
-    chown -R runner:runner /opt/github-runners /app/data /actions-runner /app
+# Create runners storage, tool cache, and user cache directories
+RUN mkdir -p /opt/github-runners /app/data /opt/hostedtoolcache /home/runner/.cache && \
+    chown -R runner:runner /opt/github-runners /app/data /actions-runner /app /opt/hostedtoolcache /home/runner/.cache
 
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
