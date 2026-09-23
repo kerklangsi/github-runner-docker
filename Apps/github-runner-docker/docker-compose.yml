@@ -26,8 +26,8 @@ services:
         source: /DATA/AppData/github-runner-docker/runners
         target: /opt/github-runners
       - type: bind
-        source: /DATA/AppData/github-runner-docker/cache
-        target: /opt/hostedtoolcache
+        source: /DATA/AppData/github-runner-docker/shared_data
+        target: /opt/github-runners/shared_data
       - type: bind
         source: /DATA/AppData/github-runner-docker/cache
         target: /home/runner/.cache
@@ -56,12 +56,12 @@ services:
         - container: /opt/github-runners
           description:
             en_us: Provisioned runner working directories
-        - container: /opt/hostedtoolcache
+        - container: /opt/github-runners/shared_data
           description:
-            en_us: Persistent tool cache for setup-python, setup-node, etc.
+            en_us: Shared persistent repository data and authentication tokens
         - container: /home/runner/.cache
           description:
-            en_us: Persistent cache for Playwright browsers and pip packages
+            en_us: Unified cache for tool installations (Python, Node) and packages (pip, Playwright, npm)
 
 x-casaos:
   architectures:
