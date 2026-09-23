@@ -26,7 +26,7 @@ services:
         source: /DATA/AppData/github-runner-docker/runners
         target: /opt/github-runners
       - type: bind
-        source: /DATA/AppData/github-runner-docker/toolcache
+        source: /DATA/AppData/github-runner-docker/cache
         target: /opt/hostedtoolcache
       - type: bind
         source: /DATA/AppData/github-runner-docker/cache
