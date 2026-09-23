@@ -11,6 +11,7 @@ if [ ! -L /opt/hostedtoolcache ]; then
 fi
 
 sudo chown -R runner:runner /home/runner/.cache /opt/github-runners /app/data /opt/shared_data || true
+sudo chmod -R 777 /opt/shared_data || true
 
 DATA_FILE="/app/data/runners.json"
 if [ ! -f "$DATA_FILE" ]; then
