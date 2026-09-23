@@ -24,7 +24,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: kerklangsi/github-runner-docker
           tags: |
@@ -44,7 +44,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Sync README to Docker Hub
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME || 'kerklangsi' }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
