@@ -1,4 +1,4 @@
-# 🚀 GitHub Runner Manager v3.0.0
+# 🚀 GitHub Runner Manager v3.2.0
 
 A modern, full-stack Web GUI and Docker container manager for GitHub Actions self-hosted runners. Easily provision, monitor, control, and update multiple GitHub runner instances from a high-performance web dashboard.
 
@@ -10,8 +10,10 @@ A modern, full-stack Web GUI and Docker container manager for GitHub Actions sel
 
 ## ✨ Features
 
-- **🌐 Modern Web Dashboard**: React + Express UI for managing all runner instances in real-time.
+- **🌐 Modern Web Dashboard**: React + Express UI running on port 3000 for managing all runner instances in real-time.
 - **⚡ Rapid Runner Provisioning**: Provision repository or organization runners using Personal Access Tokens (PAT) or one-time registration tokens.
+- **📦 Unified Persistent Tool Cache**: Automatically caches toolchains (Node.js, Python via `setup-python`/`setup-node`) and packages (pip wheels, Playwright browsers, npm) into a single persistent cache volume (`/home/runner/.cache` ➔ `/opt/hostedtoolcache`), eliminating duplicate downloads across workflows.
+- **📁 Decoupled Shared Repository Data**: Dedicated persistent storage (`/opt/shared_data`) organized by repository, with automatic workspace pre-linking for authentication tokens and credentials.
 - **🖥️ Built-in Interactive Web Terminal**: Execute diagnostics directly from the web shell.
 - **📊 Real-time Hardware Telemetry**: Monitor CPU, RAM, Disk space, and network bandwidth cgroup metrics.
 - **📜 Live Log Streaming**: Inspect isolated runner logs and global container buffers with real-time level filtering (INFO, DEBUG, WARN, ERROR).
@@ -34,13 +36,16 @@ Run the pre-built image directly from Docker Hub:
 docker run -d \
   --name github-runner-manager \
   --restart unless-stopped \
-  -p 8080:8080 \
+  -p 3000:3000 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v runner-data:/app/data \
+  -v /DATA/AppData/github-runner-docker/data:/app/data \
+  -v /DATA/AppData/github-runner-docker/runners:/opt/github-runners \
+  -v /DATA/AppData/github-runner-docker/shared_data:/opt/shared_data \
+  -v /DATA/AppData/github-runner-docker/cache:/home/runner/.cache \
   kerklangsi/github-runner-docker:latest
 ```
 
-Access the Web Dashboard at **`http://localhost:8080`** (Default Login: Username `admin`, Password `admin`).
+Access the Web Dashboard at **`http://localhost:3000`** (or `http://<your-server-ip>:3000`).
 
 ---
 
@@ -55,13 +60,23 @@ services:
     container_name: github-runner-manager
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "3000:3000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - runner-data:/app/data
-
-volumes:
-  runner-data:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: /DATA/AppData/github-runner-docker/data
+        target: /app/data
+      - type: bind
+        source: /DATA/AppData/github-runner-docker/runners
+        target: /opt/github-runners
+      - type: bind
+        source: /DATA/AppData/github-runner-docker/shared_data
+        target: /opt/shared_data
+      - type: bind
+        source: /DATA/AppData/github-runner-docker/cache
+        target: /home/runner/.cache
 ```
 
 Launch with:
@@ -76,9 +91,9 @@ docker compose up -d
 This repository includes a native `x-casaos` manifest for **ZimaOS** and **CasaOS** App Stores.
 
 1. Open **ZimaOS App Store** or **CasaOS App Store**.
-2. Click **Manual Install** or **Custom Install** (or add your repository URL as a custom App Store source).
-3. Copy and paste the contents of [`docker-compose.yml`](docker-compose.yml) or load [`Apps/github-runner-docker/docker-compose.yml`](Apps/github-runner-docker/docker-compose.yml).
-4. Click **Install**. ZimaOS will configure ports, storage binds, icons, and launching shortcuts automatically!
+2. Click **Manual Install** or **Custom Install** (or install directly from the community App Store).
+3. Load [`Apps/github-runner-docker/docker-compose.yml`](Apps/github-runner-docker/docker-compose.yml).
+4. Click **Install**. ZimaOS will configure ports, persistent storage binds, icons, and shortcuts automatically!
 
 ---
 
@@ -86,9 +101,11 @@ This repository includes a native `x-casaos` manifest for **ZimaOS** and **CasaO
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
-| `PORT` | Web GUI and API server port | `8080` |
+| `PORT` | Web GUI and API server port | `3000` |
 | `DATA_DIR` | Persistent database and settings storage | `/app/data` |
 | `RUNNERS_DIR` | Working directory for provisioned runners | `/opt/github-runners` |
+| `SHARED_DATA_DIR` | Persistent shared repository storage | `/opt/shared_data` |
+| `RUNNER_TOOL_CACHE` | Unified tool cache location | `/opt/hostedtoolcache` |
 
 ---
 
