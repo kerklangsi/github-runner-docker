@@ -154,22 +154,21 @@ function createRunner(options) {
   const repoName = repoInfo.repo || repoInfo.fullKey;
   const sharedRepoDir = path.join(SHARED_DATA_DIR, repoName);
 
-  // Pre-create auth/ inside the git checkout dir: shared_data/REPO/REPO/auth/
-  // (runner checks out to _work/REPO/REPO → shared_data/REPO/REPO)
-  if (repoInfo.repo) {
-    try {
-      fs.mkdirSync(path.join(sharedRepoDir, repoInfo.repo, 'auth'), { recursive: true });
-    } catch (e) {}
-  }
+  // Pre-create auth/ at shared workspace root (shared_data/REPO/auth/)
+  try {
+    fs.mkdirSync(path.join(sharedRepoDir, 'auth'), { recursive: true });
+  } catch (e) {}
 
-  // Symlink _work/REPO → shared_data/REPO so host only sees one entry in _work/
-  // Runner creates _work/REPO/REPO as GITHUB_WORKSPACE which resolves to shared_data/REPO/REPO
+  // Symlink _work/REPO/REPO → shared_data/REPO so all runners share one workspace
+  // All 3 runners read/write the same shared_data/REPO/ folder (auth, streams, playlists, etc.)
   if (repoInfo.repo) {
     try {
-      const outerLink = path.join(workDir, repoInfo.repo);
-      if (!fs.existsSync(outerLink)) {
-        const relPath = path.relative(workDir, sharedRepoDir);
-        fs.symlinkSync(relPath, outerLink, 'dir');
+      const repoOuterDir = path.join(workDir, repoInfo.repo);
+      fs.mkdirSync(repoOuterDir, { recursive: true });
+      const workspaceLink = path.join(repoOuterDir, repoInfo.repo);
+      if (!fs.existsSync(workspaceLink)) {
+        const relPath = path.relative(repoOuterDir, sharedRepoDir);
+        fs.symlinkSync(relPath, workspaceLink, 'dir');
       }
     } catch (e) {}
   }
