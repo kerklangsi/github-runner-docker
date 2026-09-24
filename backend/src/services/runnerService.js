@@ -149,35 +149,25 @@ function createRunner(options) {
     execSync(`cp -rn ${baseSource}/* ${actionsRunnerDir}/ || true`);
   }
 
-  // Set up shared persistent repository data and cache directories
+  // Set up shared persistent repository data directory
   const repoInfo = extractRepoInfo(options.githubUrl);
   const repoName = repoInfo.repo || repoInfo.fullKey;
   const sharedRepoDir = path.join(SHARED_DATA_DIR, repoName);
-  const sharedAuthDir = path.join(sharedRepoDir, 'auth');
-  const sharedCacheDir = path.join(sharedRepoDir, 'cache');
 
+  // Ensure shared repo directory and auth subdir exist (cache is global at /home/runner/.cache)
   try {
-    fs.mkdirSync(sharedAuthDir, { recursive: true });
-    fs.mkdirSync(sharedCacheDir, { recursive: true });
-    // Support legacy shared_auth directory if present
-    const legacyAuthDir = path.join(BASE_RUNNERS_DIR, 'shared_auth', repoName);
-    if (fs.existsSync(legacyAuthDir) && !fs.existsSync(sharedAuthDir)) {
-      fs.symlinkSync(legacyAuthDir, sharedAuthDir, 'dir');
-    }
+    fs.mkdirSync(path.join(sharedRepoDir, 'auth'), { recursive: true });
   } catch (e) {}
 
-  // Pre-link runner workspace auth directory to shared repository auth folder
+  // Symlink entire workspace _work/REPO/REPO → shared_data/REPO so all runners share one checkout
   if (repoInfo.repo) {
     try {
-      const repoWorkDir = path.join(workDir, repoInfo.repo, repoInfo.repo);
-      fs.mkdirSync(repoWorkDir, { recursive: true });
-      const authSymlink = path.join(repoWorkDir, 'auth');
-      if (!fs.existsSync(authSymlink)) {
-        const targetAuth = fs.existsSync(path.join(BASE_RUNNERS_DIR, 'shared_auth', repoName))
-          ? path.join(BASE_RUNNERS_DIR, 'shared_auth', repoName)
-          : sharedAuthDir;
-        const relPath = path.relative(repoWorkDir, targetAuth);
-        fs.symlinkSync(relPath, authSymlink, 'dir');
+      const repoOuterDir = path.join(workDir, repoInfo.repo);
+      fs.mkdirSync(repoOuterDir, { recursive: true });
+      const workspaceLink = path.join(repoOuterDir, repoInfo.repo);
+      if (!fs.existsSync(workspaceLink)) {
+        const relPath = path.relative(repoOuterDir, sharedRepoDir);
+        fs.symlinkSync(relPath, workspaceLink, 'dir');
       }
     } catch (e) {}
   }
@@ -187,9 +177,7 @@ function createRunner(options) {
     const envFile = path.join(actionsRunnerDir, '.env');
     const envContent = [
       'RUNNER_TOOL_CACHE=/opt/hostedtoolcache',
-      `SHARED_REPO_DATA=${sharedRepoDir}`,
-      `SHARED_AUTH_DIR=${sharedAuthDir}`,
-      `SHARED_CACHE_DIR=${sharedCacheDir}`
+      `SHARED_REPO_DATA=${sharedRepoDir}`
     ].join('\n') + '\n';
     fs.writeFileSync(envFile, envContent);
   } catch (e) {}
