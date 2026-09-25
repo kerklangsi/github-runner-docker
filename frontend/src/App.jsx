@@ -24,9 +24,11 @@ import AllRunnersTab from './components/tabs/AllRunnersTab';
 import GlobalLogsTab from './components/tabs/GlobalLogsTab';
 import WorkflowsTab from './components/tabs/WorkflowsTab';
 import TerminalTab from './components/tabs/TerminalTab';
+import FilesTab from './components/tabs/FilesTab';
 import SystemHardwareTab from './components/tabs/SystemHardwareTab';
 import SettingsTab from './components/tabs/SettingsTab';
 
+// Main root application view and state coordinator
 export default function App() {
   const s = useAppServices();
 
@@ -72,6 +74,7 @@ export default function App() {
           fetchSettings={s.fetchSettings}
           setStatusFilter={s.setStatusFilter}
           setIsAboutModalOpen={s.setIsAboutModalOpen}
+          versionInfo={s.versionInfo}
         />
 
         {/* Main Content Workspace */}
@@ -174,6 +177,13 @@ export default function App() {
               terminalConsoleRef={s.terminalConsoleRef}
               executeTerminalCommand={s.executeTerminalCommand}
               handleCopyLogs={copyLogs}
+              settings={s.settings}
+            />
+          )}
+
+          {s.activeTab === 'files' && (
+            <FilesTab
+              triggerToast={s.triggerToast}
               settings={s.settings}
             />
           )}

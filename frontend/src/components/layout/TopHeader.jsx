@@ -38,14 +38,6 @@ export default function TopHeader({
         )}
 
         <button 
-          onClick={() => setIsAboutModalOpen && setIsAboutModalOpen(true)}
-          className="text-xs text-[#8b949e] hover:text-white px-2 py-1 rounded hover:bg-[#21262d] transition"
-          title="App Info & Updates"
-        >
-          {versionInfo?.currentVersion || 'v2.0.0'}
-        </button>
-
-        <button 
           onClick={() => setActiveTab('settings')}
           className="flex items-center gap-2 bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-[#30363d] transition"
         >

@@ -28,6 +28,32 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Extract Semantic Version
+        id: version
+        run: |
+          PKG_VERSION=$(jq -r .version backend/package.json)
+          TAG="v${PKG_VERSION}"
+          echo "Detected package version: ${PKG_VERSION} -> Tag: ${TAG}"
+          echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+          git fetch --tags || true
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on remote."
+            echo "is_new_tag=false" >> $GITHUB_OUTPUT
+          else
+            echo "Tag ${TAG} is new."
+            echo "is_new_tag=true" >> $GITHUB_OUTPUT
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git tag -a "${TAG}" -m "Release ${TAG}"
+              git push origin "${TAG}" || true
+            fi
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -45,6 +71,7 @@ jobs:
           images: kerklangsi/github-runner-docker
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.tag != '' }}
             type=raw,value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -68,13 +95,13 @@ jobs:
           repository: kerklangsi/github-runner-docker
 
       - name: Create or Update GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
+        if: steps.version.outputs.is_new_tag == 'true' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
-          name: ${{ inputs.title || inputs.tag || github.ref_name }}
+          tag_name: ${{ inputs.tag || steps.version.outputs.tag || github.ref_name }}
+          name: ${{ inputs.title || inputs.tag || steps.version.outputs.tag || github.ref_name }}
           body: ${{ inputs.description || '' }}
-          generate_release_notes: ${{ inputs.description == '' }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

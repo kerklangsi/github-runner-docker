@@ -46,21 +46,32 @@ function addSystemLog(level = 'INFO', message = '') {
 }
 
 
+// Initializes system log file, rotating existing logs from previous boots into archive.
 function initSystemLogs() {
-  if (!fs.existsSync(SYSTEM_LOG_PATH)) {
-    const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-    const initialLines = [
-      `[${now}] [INFO] Docker container system supervisor initialized.`,
-      `[${now}] [DEBUG] Memory cgroup v2 monitoring active (/sys/fs/cgroup/memory.current).`,
-      `[${now}] [INFO] Express API server listening on 0.0.0.0:3000.`,
-      `[${now}] [INFO] GitHub Workflow Monitor active: https://github.com/kerklangsi/MY-tv/actions/workflows/update_iptv.yml`
-    ].join('\n') + '\n';
-    const dir = path.dirname(SYSTEM_LOG_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+  const dir = path.dirname(SYSTEM_LOG_PATH);
+  const archiveDir = path.join(dir, 'archive');
+  if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  try {
+    if (fs.existsSync(SYSTEM_LOG_PATH) && fs.statSync(SYSTEM_LOG_PATH).size > 0) {
+      fs.copyFileSync(SYSTEM_LOG_PATH, path.join(archiveDir, `system_${stamp}.log`));
     }
-    fs.writeFileSync(SYSTEM_LOG_PATH, initialLines);
-  }
+    if (fs.existsSync(DOCKER_LOG_PATH) && fs.statSync(DOCKER_LOG_PATH).size > 0) {
+      fs.copyFileSync(DOCKER_LOG_PATH, path.join(archiveDir, `docker_${stamp}.log`));
+    }
+  } catch (e) {}
+
+  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const initialLines = [
+    `[${now}] [INFO] Docker container system supervisor initialized.`,
+    `[${now}] [DEBUG] Memory cgroup v2 monitoring active (/sys/fs/cgroup/memory.current).`,
+    `[${now}] [INFO] Express API server listening on 0.0.0.0:3000.`,
+    `[${now}] [INFO] GitHub Workflow Monitor active: https://github.com/kerklangsi/MY-tv/actions/workflows/update_iptv.yml`
+  ].join('\n') + '\n';
+
+  fs.writeFileSync(SYSTEM_LOG_PATH, initialLines);
+  try { fs.writeFileSync(DOCKER_LOG_PATH, ''); } catch (e) {}
 }
 
 function parseLogLevel(line) {
@@ -496,6 +507,52 @@ function clearRunnerLogs(runnerId) {
       db.saveRunners(runners);
     }
   }
+// Retrieves all archived log files across system and runner archive directories.
+function getArchivedLogs() {
+  const archives = [];
+  const systemArchiveDir = path.join(path.dirname(SYSTEM_LOG_PATH), 'archive');
+  if (fs.existsSync(systemArchiveDir)) {
+    fs.readdirSync(systemArchiveDir).filter(f => f.endsWith('.log')).forEach(f => {
+      try {
+        const stat = fs.statSync(path.join(systemArchiveDir, f));
+        archives.push({ filename: f, type: 'system', size: stat.size, mtime: stat.mtime });
+      } catch (e) {}
+    });
+  }
+  const runnerService = require('./runnerService');
+  const runners = runnerService.getAllRunners();
+  runners.forEach(r => {
+    const rDir = runnerService.getRunnerDir ? runnerService.getRunnerDir(r) : path.join('/opt/github-runners', r.name);
+    const rArchive = path.join(rDir, 'logs', 'archive');
+    if (fs.existsSync(rArchive)) {
+      fs.readdirSync(rArchive).filter(f => f.endsWith('.log')).forEach(f => {
+        try {
+          const stat = fs.statSync(path.join(rArchive, f));
+          archives.push({ filename: f, runnerName: r.name, type: 'runner', size: stat.size, mtime: stat.mtime });
+        } catch (e) {}
+      });
+    }
+  });
+  archives.sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
+  return archives;
+}
+
+// Reads and returns content of an archived log file safely.
+function getArchivedLogContent(filename) {
+  const cleanName = path.basename(filename);
+  const systemPath = path.join(path.dirname(SYSTEM_LOG_PATH), 'archive', cleanName);
+  if (fs.existsSync(systemPath)) {
+    return fs.readFileSync(systemPath, 'utf-8');
+  }
+  const runnerService = require('./runnerService');
+  for (const r of runnerService.getAllRunners()) {
+    const rDir = runnerService.getRunnerDir ? runnerService.getRunnerDir(r) : path.join('/opt/github-runners', r.name);
+    const rPath = path.join(rDir, 'logs', 'archive', cleanName);
+    if (fs.existsSync(rPath)) {
+      return fs.readFileSync(rPath, 'utf-8');
+    }
+  }
+  return null;
 }
 
 module.exports = {
@@ -503,5 +560,7 @@ module.exports = {
   getRunnerLogs,
   getGlobalLogs,
   clearGlobalLogs,
-  clearRunnerLogs
+  clearRunnerLogs,
+  getArchivedLogs,
+  getArchivedLogContent
 };

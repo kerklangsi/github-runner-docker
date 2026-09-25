@@ -1,6 +1,7 @@
 import React from 'react';
-import { RefreshCw, Wifi } from 'lucide-react';
+import { RefreshCw, Wifi, Play } from 'lucide-react';
 
+// Renders the automation, watchdog, and alert webhook settings controls
 export default function AutomationAlertsCard({
   settings,
   setSettings,
@@ -16,6 +17,23 @@ export default function AutomationAlertsCard({
         {settings.showHeadlines && (
           <p className="text-xs text-[#8b949e] mt-1">Configure watchdog auto-recovery intervals and outbound webhook notifications.</p>
         )}
+      </div>
+
+      {/* ── Auto-Start Runners on Boot ── */}
+      <div className="bg-[#0d1117] border border-[#30363d] p-4 rounded-xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Play className="w-4 h-4 text-[#58a6ff]" />
+            <h4 className="text-sm font-semibold text-white">Auto-Start Runners on Boot</h4>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" checked={settings.autoStartRunners !== false}
+              onChange={e => autoSaveSettings({ ...settings, autoStartRunners: e.target.checked }, e.target.checked ? 'Auto-start runners on boot enabled' : 'Auto-start runners on boot disabled')}
+              className="sr-only peer" />
+            <div className="w-11 h-6 bg-[#30363d] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#238636]"></div>
+          </label>
+        </div>
+        <p className="text-xs text-[#8b949e]">Automatically start all configured runners when the Docker container boots up</p>
       </div>
 
       {/* ── Auto-Restart Watchdog ── */}

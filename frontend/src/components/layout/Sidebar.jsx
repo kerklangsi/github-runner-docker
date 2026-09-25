@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
   Activity, Layers, FileText, Clock, Terminal, Cpu, Settings, 
-  ChevronLeft, ChevronRight, Info, CheckCircle2 
+  ChevronLeft, ChevronRight, Info, CheckCircle2, Folder 
 } from 'lucide-react';
 
+// Renders the side navigation menu and container version badge
 export default function Sidebar({
   activeTab,
   setActiveTab,
@@ -14,7 +15,8 @@ export default function Sidebar({
   fetchWorkflows,
   fetchSettings,
   setStatusFilter,
-  setIsAboutModalOpen
+  setIsAboutModalOpen,
+  versionInfo
 }) {
   return (
     <aside className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} bg-[#161b22] border-r border-[#30363d] p-3 flex flex-col justify-between transition-all duration-300 z-10 shrink-0`}>
@@ -86,6 +88,15 @@ export default function Sidebar({
           </button>
 
           <button 
+            onClick={() => setActiveTab('files')}
+            title="Files & Storage"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl text-sm font-medium transition ${activeTab === 'files' ? 'bg-[#21262d] text-white shadow-sm' : 'text-[#8b949e] hover:bg-[#21262d]/50 hover:text-white'}`}
+          >
+            <Folder className="w-4 h-4 text-[#58a6ff] shrink-0" />
+            {!isSidebarCollapsed && <span>Files & Storage</span>}
+          </button>
+
+          <button 
             onClick={() => setActiveTab('system')}
             title="System Hardware"
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl text-sm font-medium transition ${activeTab === 'system' ? 'bg-[#21262d] text-white shadow-sm' : 'text-[#8b949e] hover:bg-[#21262d]/50 hover:text-white'}`}
@@ -116,10 +127,10 @@ export default function Sidebar({
           {!isSidebarCollapsed && <span>About Docker Container</span>}
         </button>
 
-        <div className={`py-1.5 bg-[#0d1117] rounded-lg border border-[#30363d] flex items-center overflow-hidden ${isSidebarCollapsed ? 'justify-center w-full px-1 text-center' : 'justify-between px-3'} text-[11px]`} title="v2.0.0 (Up to date)">
+        <div className={`py-1.5 bg-[#0d1117] rounded-lg border border-[#30363d] flex items-center overflow-hidden ${isSidebarCollapsed ? 'justify-center w-full px-1 text-center' : 'justify-between px-3'} text-[11px]`} title={`${versionInfo?.currentVersion || 'v3.0.0'} (Up to date)`}>
           {!isSidebarCollapsed && <span className="text-white font-semibold shrink-0">Version</span>}
           <span className={`text-[#3fb950] font-semibold font-mono truncate ${isSidebarCollapsed ? 'text-[9px] tracking-tighter text-center' : 'text-[11px] flex items-center gap-1'}`}>
-            {!isSidebarCollapsed && <CheckCircle2 className="w-3 h-3 shrink-0" />} v2.0.0
+            {!isSidebarCollapsed && <CheckCircle2 className="w-3 h-3 shrink-0" />} {versionInfo?.currentVersion || 'v3.0.0'}
           </span>
         </div>
       </div>

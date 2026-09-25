@@ -193,6 +193,7 @@ function createRunner(options) {
     dir: runnerDir,
     workDir,
     pid: null,
+    watchdog: !!options.watchdog,
     status: 'PROVISIONING',
     lastState: 'PROVISIONING',
     createdDate: new Date().toISOString(),
@@ -303,6 +304,25 @@ function createRunner(options) {
   return { success: true, runner: runnerRecord };
 }
 
+// Ensures repository workspace symlink points directly to persistent shared data.
+function ensureSharedRepoLink(runner) {
+  try {
+    const repoInfo = extractRepoInfo(runner.githubUrl);
+    const repoName = repoInfo.repo || repoInfo.fullKey;
+    if (!repoName) return;
+    const sharedRepoDir = path.join(SHARED_DATA_DIR, repoName);
+    if (!fs.existsSync(sharedRepoDir)) fs.mkdirSync(sharedRepoDir, { recursive: true });
+    const workDir = runner.workDir || path.join(getRunnerDir(runner), '_work');
+    const repoOuterDir = path.join(workDir, repoName);
+    if (!fs.existsSync(repoOuterDir)) fs.mkdirSync(repoOuterDir, { recursive: true });
+    const workspaceLink = path.join(repoOuterDir, repoName);
+    if (!fs.existsSync(workspaceLink)) {
+      const relPath = path.relative(repoOuterDir, sharedRepoDir);
+      fs.symlinkSync(relPath, workspaceLink, 'dir');
+    }
+  } catch (e) {}
+}
+
 // Spawns runner daemon process and logs output to disk.
 function startRunner(id) {
   const runners = db.getRunners();
@@ -345,6 +365,18 @@ function startRunner(id) {
   if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
 
   const logFilePath = path.join(logsDir, 'runner.log');
+
+  // Archive existing log file if not empty before starting fresh session
+  try {
+    if (fs.existsSync(logFilePath) && fs.statSync(logFilePath).size > 0) {
+      const archiveDir = path.join(logsDir, 'archive');
+      if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      fs.copyFileSync(logFilePath, path.join(archiveDir, `runner_${stamp}.log`));
+    }
+  } catch (e) {}
+
+  ensureSharedRepoLink(runner);
 
   // Truncate the log file on each fresh start so previous session logs don't bleed in
   fs.writeFileSync(logFilePath, '');
@@ -476,6 +508,7 @@ function updateRunnerConfig(id, config) {
   if (config.token || config.registrationToken) runner.registrationToken = config.token || config.registrationToken;
   if (config.labels) runner.labels = config.labels;
   if (config.runnerGroup) runner.runnerGroup = config.runnerGroup;
+  if (config.watchdog !== undefined) runner.watchdog = !!config.watchdog;
 
   runners[index] = runner;
   db.saveRunners(runners);
