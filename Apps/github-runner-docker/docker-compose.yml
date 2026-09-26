@@ -70,9 +70,9 @@ x-casaos:
   author: Kerk Langsi
   category: Developer Tools
   description:
-    en_us: Full-stack Web GUI and Docker container manager for GitHub Actions self-hosted runners. Easily provision, monitor, control, and update multiple GitHub runner instances from a high-performance web dashboard.
+    en_US: Full-stack Web GUI and Docker container manager for GitHub Actions self-hosted runners. Easily provision, monitor, control, and update multiple GitHub runner instances from a high-performance web dashboard.
   developer: Kerk Langsi
-  icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png
+  icon: https://kerklangsi.github.io/zimaos-appstore/apps/github-runner/assets/icon.svg
   id: github-runner-docker
   index: /
   is_store: true
@@ -81,8 +81,8 @@ x-casaos:
   scheme: http
   store_app_id: github-runner-docker
   title:
-    en_us: GitHub Runner Manager
+    en_US: GitHub Runner Manager
   tagline:
-    en_us: Web GUI & Container Supervisor for GitHub Actions Self-Hosted Runners
-  thumbnail: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png
-  version: 3.0.0
+    en_US: Web GUI & Container Supervisor for GitHub Actions Self-Hosted Runners
+  thumbnail: https://kerklangsi.github.io/zimaos-appstore/apps/github-runner/assets/icon.svg
+  version: 3.2.0
