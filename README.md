@@ -3,7 +3,7 @@
 A modern, full-stack Web GUI and Docker container manager for GitHub Actions self-hosted runners. Easily provision, monitor, control, and update multiple GitHub runner instances from a high-performance web dashboard.
 
 [![Docker Image](https://img.shields.io/docker/v/kerklangsi/github-runner-docker?label=Docker%20Hub&color=0969da)](https://hub.docker.com/r/kerklangsi/github-runner-docker)
-[![GitHub Release](https://img.shields.io/github/v/release/kerklangsi/github-runner-docker?color=238636)](https://github.com/kerklangsi/github-runner-docker/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/kerklangsi/github-runner?color=238636)](https://github.com/kerklangsi/github-runner/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---

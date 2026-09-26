@@ -1,7 +1,7 @@
 const https = require('https');
 
-const CURRENT_VERSION = 'v3.0.0';
-const GITHUB_REPO = 'kerklangsi/github-runner-docker';
+const CURRENT_VERSION = 'v3.2.0';
+const GITHUB_REPO = 'kerklangsi/github-runner';
 const DOCKERHUB_REPO = 'kerklangsi/github-runner-docker';
 
 let cachedVersionInfo = null;
