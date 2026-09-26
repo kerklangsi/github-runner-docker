@@ -31,9 +31,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract Semantic Version
+      - name: Sync and Extract Semantic Version
         id: version
         run: |
+          TARGET_TAG="${{ inputs.tag }}"
+          python scripts/sync_version.py "$TARGET_TAG"
           PKG_VERSION=$(jq -r .version backend/package.json)
           TAG="v${PKG_VERSION}"
           echo "Detected package version: ${PKG_VERSION} -> Tag: ${TAG}"
@@ -50,8 +52,10 @@ jobs:
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               git config user.name "github-actions[bot]"
               git config user.email "github-actions[bot]@users.noreply.github.com"
+              git add backend/package.json frontend/package.json backend/src/services/versionService.js docker-compose.yml README.md
+              git diff --staged --quiet || git commit -m "chore(release): sync version to ${TAG} [skip ci]"
               git tag -a "${TAG}" -m "Release ${TAG}"
-              git push origin "${TAG}" || true
+              git push origin main "${TAG}" || true
             fi
           fi
 
