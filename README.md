@@ -26,7 +26,7 @@ A modern, full-stack Web GUI and Docker container manager for GitHub Actions sel
 - **💾 Config Backup & Restore**: Export and import system configurations as JSON.
 - **🎨 Dark / Light Themes & Custom Avatars**: Customize profile avatar image URLs or base64 uploads.
 - **🚀 Automatic Update Checker**: Notifies users in-app when new releases are pushed to GitHub or Docker Hub.
-- **🖥️ ZimaOS & CasaOS App Store Ready**: Fully supports `x-casaos` native app store manifests.
+- **🖥️ Universal Docker Compose**: Compatible with standard Docker, Docker Compose, Portainer, CasaOS, and ZimaOS.
 
 ---
 
@@ -90,14 +90,12 @@ docker compose up -d
 
 ---
 
-### Option 3: ZimaOS / CasaOS App Store
-
-This repository includes a native `x-casaos` manifest for **ZimaOS** and **CasaOS** App Stores.
+### Option 3: ZimaOS / CasaOS Manual Install
 
 1. Open **ZimaOS App Store** or **CasaOS App Store**.
-2. Click **Manual Install** or **Custom Install** (or install directly from the community App Store).
-3. Load [`docker-compose.yml`](docker-compose.yml).
-4. Click **Install**. ZimaOS will configure ports, persistent storage binds, icons, and shortcuts automatically!
+2. Click **Manual Install** or **Custom Install**.
+3. Import or paste [`docker-compose.yml`](docker-compose.yml).
+4. Click **Install**.
 
 ---
 
