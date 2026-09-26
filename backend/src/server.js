@@ -338,7 +338,7 @@ app.get('/api/backup', (req, res) => {
   }));
   const settings = db.getSettings();
   const backup = { version: 1, exportedAt: new Date().toISOString(), runners, settings };
-  res.setHeader('Content-Disposition', `attachment; filename="runner-manager-backup-${new Date().toISOString().slice(0,10)}.json"`);
+  res.setHeader('Content-Disposition', `attachment; filename="runner-manager-backup-${new Date().toISOString().slice(0, 10)}.json"`);
   res.json(backup);
 });
 
@@ -398,89 +398,6 @@ app.post('/api/terminal/exec', (req, res) => {
   });
 });
 
-// 15. File Explorer & Storage Management
-const ALLOWED_FILE_ROOTS = [
-  process.env.RUNNERS_DIR || '/opt/github-runners',
-  process.env.SHARED_DATA_DIR || '/opt/shared_data',
-  process.env.DATA_DIR || '/app/data'
-];
-
-// Resolves path ensuring it resides within authorized root storage directories
-function resolveSafePath(userPath) {
-  const normalized = path.normalize(userPath || '');
-  for (const root of ALLOWED_FILE_ROOTS) {
-    if (normalized.startsWith(root)) {
-      return normalized;
-    }
-  }
-  return ALLOWED_FILE_ROOTS[1]; // Default to shared_data if outside
-}
-
-app.get('/api/files', (req, res) => {
-  try {
-    const targetDir = resolveSafePath(req.query.dir || ALLOWED_FILE_ROOTS[1]);
-    if (!fs.existsSync(targetDir)) {
-      return res.json({ currentDir: targetDir, items: [], roots: ALLOWED_FILE_ROOTS });
-    }
-    const entries = fs.readdirSync(targetDir, { withFileTypes: true });
-    const items = entries.map(ent => {
-      const fullPath = path.join(targetDir, ent.name);
-      let stat = {};
-      try { stat = fs.statSync(fullPath); } catch (e) {}
-      return {
-        name: ent.name,
-        path: fullPath,
-        isDirectory: ent.isDirectory(),
-        isSymbolicLink: ent.isSymbolicLink(),
-        size: stat.size || 0,
-        mtime: stat.mtime || null
-      };
-    });
-    items.sort((a, b) => (b.isDirectory ? 1 : 0) - (a.isDirectory ? 1 : 0) || a.name.localeCompare(b.name));
-    res.json({ currentDir: targetDir, items, roots: ALLOWED_FILE_ROOTS });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/files/content', (req, res) => {
-  try {
-    const targetFile = resolveSafePath(req.query.file);
-    if (!fs.existsSync(targetFile) || fs.statSync(targetFile).isDirectory()) {
-      return res.status(404).json({ error: 'File not found or is a directory' });
-    }
-    const stat = fs.statSync(targetFile);
-    if (stat.size > 1024 * 1024 * 2) {
-      return res.status(400).json({ error: 'File too large to preview (>2MB)' });
-    }
-    const content = fs.readFileSync(targetFile, 'utf-8');
-    res.json({ path: targetFile, name: path.basename(targetFile), size: stat.size, content });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/files/download', (req, res) => {
-  try {
-    const targetFile = resolveSafePath(req.query.file);
-    if (!fs.existsSync(targetFile)) return res.status(404).json({ error: 'File not found' });
-    res.download(targetFile, path.basename(targetFile));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 16. Log Archives Endpoints
-app.get('/api/logs/archives', (req, res) => {
-  res.json(logService.getArchivedLogs());
-});
-
-app.get('/api/logs/archives/:filename', (req, res) => {
-  const content = logService.getArchivedLogContent(req.params.filename);
-  if (content === null) return res.status(404).json({ error: 'Archived log not found' });
-  res.json({ filename: req.params.filename, content });
-});
-
 // Serve frontend static assets if built
 const frontendDist = require('path').join(__dirname, '../../frontend/dist');
 if (require('fs').existsSync(frontendDist)) {
@@ -497,10 +414,4 @@ app.listen(PORT, '0.0.0.0', () => {
   const savedSettings = db.getSettings();
   watchdogService.updateSettings(savedSettings);
   webhookService.updateSettings(savedSettings);
-
-  // Auto-start runners on container boot if enabled in settings
-  if (savedSettings.autoStartRunners !== false) {
-    logService.addSystemLog('INFO', 'Auto-starting configured runners on container boot...');
-    runnerService.startAllRunners();
-  }
 });

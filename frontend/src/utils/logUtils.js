@@ -11,35 +11,12 @@ export function formatUptime(seconds) {
 }
 
 /**
- * Copy logs array to clipboard with fallback for non-secure HTTP contexts
+ * Copy logs array to clipboard
  */
 export function handleCopyLogs(logsArray, triggerToast) {
   const text = Array.isArray(logsArray) ? logsArray.join('\n') : String(logsArray);
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(() => {
-      if (triggerToast) triggerToast('Logs copied to clipboard!', 'success');
-    }).catch(() => fallbackCopy(text, triggerToast));
-  } else {
-    fallbackCopy(text, triggerToast);
-  }
-}
-
-function fallbackCopy(text, triggerToast) {
-  try {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    const successful = document.execCommand('copy');
-    document.body.removeChild(textArea);
-    if (successful && triggerToast) triggerToast('Logs copied to clipboard!', 'success');
-  } catch (err) {
-    if (triggerToast) triggerToast('Failed to copy logs to clipboard', 'error');
-  }
+  navigator.clipboard.writeText(text);
+  if (triggerToast) triggerToast('Logs copied to clipboard!', 'success');
 }
 
 /**
