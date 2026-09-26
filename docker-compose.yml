@@ -1,8 +1,8 @@
-name: github-runner-docker
+name: github-runner
 
 services:
   github-runner:
-    image: kerklangsi/github-runner-docker:latest
+    image: kerklangsi/github-runner:latest
     container_name: github-runner-manager
     restart: unless-stopped
     network_mode: bridge
@@ -20,16 +20,16 @@ services:
         source: /var/run/docker.sock
         target: /var/run/docker.sock
       - type: bind
-        source: /DATA/AppData/github-runner-docker/data
+        source: /DATA/AppData/github-runner/data
         target: /app/data
       - type: bind
-        source: /DATA/AppData/github-runner-docker/runners
+        source: /DATA/AppData/github-runner/runners
         target: /opt/github-runners
       - type: bind
-        source: /DATA/AppData/github-runner-docker/shared_data
+        source: /DATA/AppData/github-runner/shared_data
         target: /opt/shared_data
       - type: bind
-        source: /DATA/AppData/github-runner-docker/cache
+        source: /DATA/AppData/github-runner/cache
         target: /home/runner/.cache
     x-casaos:
       envs:
@@ -73,13 +73,13 @@ x-casaos:
     en_US: Full-stack Web GUI and Docker container manager for GitHub Actions self-hosted runners. Easily provision, monitor, control, and update multiple GitHub runner instances from a high-performance web dashboard.
   developer: Kerk Langsi
   icon: https://raw.githubusercontent.com/kerklangsi/github-runner/main/icon.svg
-  id: github-runner-docker
+  id: github-runner
   index: /
   is_store: true
   main: github-runner
   port_map: "8080"
   scheme: http
-  store_app_id: github-runner-docker
+  store_app_id: github-runner
   title:
     en_US: GitHub Runner Manager
   tagline:

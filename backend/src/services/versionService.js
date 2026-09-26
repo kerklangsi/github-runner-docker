@@ -2,7 +2,7 @@ const https = require('https');
 
 const CURRENT_VERSION = 'v3.2.0';
 const GITHUB_REPO = 'kerklangsi/github-runner';
-const DOCKERHUB_REPO = 'kerklangsi/github-runner-docker';
+const DOCKERHUB_REPO = 'kerklangsi/github-runner';
 
 let cachedVersionInfo = null;
 let lastCheckTime = 0;
@@ -10,7 +10,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
 
 function fetchJson(url, headers = {}) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'github-runner-docker-manager', ...headers } }, (res) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'github-runner-manager', ...headers } }, (res) => {
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {

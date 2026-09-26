@@ -68,7 +68,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: kerklangsi/github-runner-docker
+          images: |
+            kerklangsi/github-runner
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=${{ steps.version.outputs.tag }},enable=${{ steps.version.outputs.tag != '' }}
@@ -88,11 +89,12 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Sync README to Docker Hub
+        continue-on-error: true
         uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME || 'kerklangsi' }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: kerklangsi/github-runner-docker
+          repository: kerklangsi/github-runner
 
       - name: Generate Dynamic Release Notes
         run: |

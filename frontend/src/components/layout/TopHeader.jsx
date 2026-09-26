@@ -13,7 +13,7 @@ export default function TopHeader({
     <header className="h-14 bg-[#161b22] border-b border-[#30363d] px-6 flex items-center justify-between z-20 shrink-0">
       <div className="flex items-center gap-3">
         <a 
-          href="https://github.com/kerklangsi/github-runner-docker" 
+          href="https://github.com/kerklangsi/github-runner" 
           target="_blank" 
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-white hover:text-[#58a6ff] transition"
@@ -26,7 +26,7 @@ export default function TopHeader({
       <div className="flex items-center gap-3">
         {versionInfo?.updateAvailable && (
           <a
-            href={versionInfo.githubUrl || 'https://github.com/kerklangsi/github-runner-docker/releases'}
+            href={versionInfo.githubUrl || 'https://github.com/kerklangsi/github-runner/releases'}
             target="_blank"
             rel="noopener noreferrer"
             className="animate-pulse flex items-center gap-1.5 bg-[#1f6feb]/20 hover:bg-[#1f6feb]/30 text-[#58a6ff] text-xs font-semibold px-3 py-1.5 rounded-lg border border-[#1f6feb]/50 transition"

@@ -80,7 +80,7 @@ export default function AboutModal({
           {/* Quick Links */}
           <div className="grid grid-cols-2 gap-2">
             <a
-              href="https://github.com/kerklangsi/github-runner-docker"
+              href="https://github.com/kerklangsi/github-runner"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 p-2 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-white rounded-xl transition text-[11px] font-medium"
@@ -91,7 +91,7 @@ export default function AboutModal({
             </a>
 
             <a
-              href="https://hub.docker.com/r/kerklangsi/github-runner-docker"
+              href="https://hub.docker.com/r/kerklangsi/github-runner"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 p-2 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-white rounded-xl transition text-[11px] font-medium"

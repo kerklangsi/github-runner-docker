@@ -5,9 +5,9 @@ export function useVersionService(isAuthenticated) {
     currentVersion: 'v2.0.0',
     latestVersion: 'v2.0.0',
     updateAvailable: false,
-    githubUrl: 'https://github.com/kerklangsi/github-runner-docker/releases/latest',
-    githubRepoUrl: 'https://github.com/kerklangsi/github-runner-docker',
-    dockerHubUrl: 'https://hub.docker.com/r/kerklangsi/github-runner-docker'
+    githubUrl: 'https://github.com/kerklangsi/github-runner/releases/latest',
+    githubRepoUrl: 'https://github.com/kerklangsi/github-runner',
+    dockerHubUrl: 'https://hub.docker.com/r/kerklangsi/github-runner'
   });
 
   useEffect(() => {
