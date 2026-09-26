@@ -1,6 +1,29 @@
+# Git & GitHub
 .git
 .gitignore
+.github
+
+# Environment & Configs
 .env
+.env.*
 README.md
+LICENSE
+icon.svg
 docker-compose.yml
+
+# Build & Automation Scripts
 scripts
+dist
+.agents
+
+# Node Dependencies & Local Builds
+**/node_modules
+frontend/dist
+
+# Logs & OS Junk
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode
+.idea
